@@ -1,6 +1,11 @@
 # Event Migration Script
 
-The following script is made to transfer the events from the OLD account to the NEW account for hiring motion.
+The Script uses a single OAuth Account, the OAuth account being used must have write access on both the calendars.
+
+## Usage
+1. Set the env values as defined below.
+2. Start the program using `go run main.go start`
+
 
 ## Environment Variables
 
@@ -8,15 +13,10 @@ The following script is made to transfer the events from the OLD account to the 
 APP_NAME: The app name to be used by Gofr
 APP_VERSION: The app version 
 
-DB_DIALECT: DB Dialect for the DB
-DB_HOST: DB Host
-DB_PORT: DB Port
-DB_NAME: DB User Name
-DB_PASSWORD: DB Password
+GOOGLE_CREDENTIALS: Credentials for the GCP Project
+REFRESH_TOKEN: OAuth token for the account with Calendar Scope
 
-OLD_PROJECT_CREDENTIALS: Credentials for the old gcp project
-OLD_OAUTH_TOKENS: OAuth tokens for the old account
-
-NEW_PROJECT_CREDENTIALS: Credentials for the new gcp project
-NEW_OAUTH_TOKENS: OAuth tokens for the new account
+SOURCE_CALENDAR: Calendar ID of the source calendar
+DESTINATION_CALENDAR: Calendar ID of the destination calendar
 ```
+

@@ -13,11 +13,10 @@ import (
 const state = "calendar"
 
 type calendar struct {
-	calendarID string
-	service    *gcalendar.EventsService
+	service *gcalendar.EventsService
 }
 
-func New(ctx *gofr.Context, credentialEnvKey, tokenEnvKey, calendarID string) (google.CalendarService, error) {
+func New(ctx *gofr.Context, credentialEnvKey, tokenEnvKey string) (google.CalendarService, error) {
 	client, err := token.NewClientFromEnv(ctx, credentialEnvKey, tokenEnvKey, []string{gcalendar.CalendarScope,
 		gcalendar.CalendarReadonlyScope, gcalendar.CalendarEventsScope, gcalendar.CalendarEventsReadonlyScope})
 	if err != nil {
@@ -31,32 +30,32 @@ func New(ctx *gofr.Context, credentialEnvKey, tokenEnvKey, calendarID string) (g
 		return nil, err
 	}
 
-	return &calendar{service: service.Events, calendarID: calendarID}, nil
+	return &calendar{service: service.Events}, nil
 }
 
-func (c calendar) Get(eventID string) (*gcalendar.Event, error) {
-	event, err := c.service.Get(c.calendarID, eventID).Do()
+func (c calendar) List(sourceCalendar string, pageToken string) ([]*gcalendar.Event, string, error) {
+	listCall := c.service.List(sourceCalendar).
+		SingleEvents(true).
+		OrderBy("startTime").
+		MaxResults(100).
+		PageToken(pageToken)
+
+	events, err := listCall.Do()
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 
-	return event, nil
+	return events.Items, events.NextPageToken, nil
 }
 
-func (c calendar) Create(event *gcalendar.Event) (*gcalendar.Event, error) {
-	createCall := c.service.Insert(c.calendarID, event).
-		SupportsAttachments(true).
-		ConferenceDataVersion(1).
+func (c calendar) Move(sourceCalendar, eventID, destinationCalendarID string) (*gcalendar.Event, error) {
+	moveCall := c.service.Move(sourceCalendar, eventID, destinationCalendarID).
 		SendUpdates("none")
 
-	createdEvent, err := createCall.Do()
+	movedEvent, err := moveCall.Do()
 	if err != nil {
 		return nil, err
 	}
 
-	return createdEvent, nil
-}
-
-func (c calendar) Delete(eventID, sendUpdates string) error {
-	return c.service.Delete(c.calendarID, eventID).SendUpdates(sendUpdates).Do()
+	return movedEvent, nil
 }

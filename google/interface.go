@@ -14,7 +14,6 @@ type ClientProvider interface {
 }
 
 type CalendarService interface {
-	Get(eventID string) (*calendar.Event, error)
-	Create(event *calendar.Event) (*calendar.Event, error)
-	Delete(eventID, sendUpdates string) error
+	List(sourceCalendar string, pageToken string) ([]*calendar.Event, string, error)
+	Move(sourceCalendar, eventID, destinationCalendarID string) (*calendar.Event, error)
 }

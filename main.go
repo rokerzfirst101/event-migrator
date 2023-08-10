@@ -2,29 +2,33 @@ package main
 
 import (
 	"developer.zopsmart.com/go/gofr/pkg/gofr"
+	"event-migration-script/google"
 	"event-migration-script/google/calendar"
-	"event-migration-script/handler"
 	"event-migration-script/handler/migrator"
-	"event-migration-script/store/interview"
 )
 
 const (
-	OldProjectCredentialsEnv = "OLD_PROJECT_CREDENTIALS"
-	OldRefreshTokensEnv      = "OLD_REFRESH_TOKENS"
-	NewProjectCredentialsEnv = "NEW_PROJECT_CREDENTIALS"
-	NewRefreshTokensEnv      = "NEW_REFRESH_TOKENS"
+	GoogleCredential    = "GOOGLE_CREDENTIALS"
+	RefreshToken        = "REFRESH_TOKEN"
+	SourceCalendar      = "SOURCE_CALENDAR"
+	DestinationCalendar = "DESTINATION_CALENDAR"
 )
 
 func main() {
 	app := gofr.NewCMD()
 
-	app.GET("start", func(c *gofr.Context) (interface{}, error) {
-		eventMigrationHandler, err := getEventMigrationHandler(c)
+	app.GET("start", func(ctx *gofr.Context) (interface{}, error) {
+		sourceCalendarID := ctx.Config.Get(SourceCalendar)
+		destinationCalendarID := ctx.Config.Get(DestinationCalendar)
+
+		client, err := getClient(ctx)
 		if err != nil {
 			return nil, err
 		}
 
-		_, err = eventMigrationHandler.Start(c)
+		eventMigrator := migrator.New(client, sourceCalendarID, destinationCalendarID)
+
+		_, err = eventMigrator.Start(ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -35,18 +39,11 @@ func main() {
 	app.Start()
 }
 
-func getEventMigrationHandler(ctx *gofr.Context) (handler.EventMigrator, error) {
-	interviewStore := interview.New()
-
-	oldClient, err := calendar.New(ctx, OldProjectCredentialsEnv, OldRefreshTokensEnv, "")
+func getClient(ctx *gofr.Context) (google.CalendarService, error) {
+	client, err := calendar.New(ctx, GoogleCredential, RefreshToken)
 	if err != nil {
 		return nil, err
 	}
 
-	newClient, err := calendar.New(ctx, OldProjectCredentialsEnv, OldRefreshTokensEnv, "")
-	if err != nil {
-		return nil, err
-	}
-
-	return migrator.New(interviewStore, oldClient, newClient), nil
+	return client, nil
 }

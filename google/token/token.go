@@ -28,7 +28,7 @@ func NewClientFromEnv(ctx *gofr.Context, credentialEnvKey, tokenEnvKey string, s
 
 	var token *oauth2.Token
 
-	err = json.Unmarshal(tokenData, token)
+	err = json.Unmarshal(tokenData, &token)
 	if err != nil {
 		return nil, err
 	}
