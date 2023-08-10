@@ -5,6 +5,7 @@ import (
 	"event-migration-script/google"
 	"event-migration-script/google/calendar"
 	"event-migration-script/handler/migrator"
+	"os"
 )
 
 const (
@@ -28,15 +29,35 @@ func main() {
 
 		eventMigrator := migrator.New(client, sourceCalendarID, destinationCalendarID)
 
-		_, err = eventMigrator.Start(ctx)
+		pageToken, err := eventMigrator.Start(ctx)
 		if err != nil {
 			return nil, err
 		}
 
-		return nil, nil
+		return nil, writePageTokenToFile(pageToken)
 	})
 
 	app.Start()
+}
+
+func writePageTokenToFile(pageToken interface{}) error {
+	pageTokenString := pageToken.(string)
+
+	if pageTokenString != "" {
+		file, _ := os.OpenFile("page_token.txt", os.O_CREATE|os.O_WRONLY, 0644)
+
+		_, err := file.WriteString(pageTokenString)
+		if err != nil {
+			return err
+		}
+
+		err = file.Close()
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func getClient(ctx *gofr.Context) (google.CalendarService, error) {
