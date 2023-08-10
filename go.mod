@@ -4,13 +4,9 @@ go 1.20
 
 require (
 	developer.zopsmart.com/go/gofr v0.7.0
-	github.com/DATA-DOG/go-sqlmock v1.5.0
 	github.com/golang/mock v1.6.0
-	github.com/stretchr/testify v1.8.1
 	golang.org/x/oauth2 v0.8.0
 	google.golang.org/api v0.126.0
-	gorm.io/driver/mysql v1.4.5
-	gorm.io/gorm v1.24.3
 )
 
 require (
@@ -105,7 +101,6 @@ require (
 	github.com/openzipkin/zipkin-go v0.4.1 // indirect
 	github.com/pierrec/lz4/v4 v4.1.17 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
-	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/prometheus/client_golang v1.13.0 // indirect
 	github.com/prometheus/client_model v0.3.0 // indirect
 	github.com/prometheus/common v0.37.0 // indirect
@@ -146,8 +141,9 @@ require (
 	google.golang.org/grpc v1.55.0 // indirect
 	google.golang.org/protobuf v1.30.0 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
+	gorm.io/driver/mysql v1.4.5 // indirect
 	gorm.io/driver/postgres v1.4.6 // indirect
 	gorm.io/driver/sqlite v1.4.4 // indirect
 	gorm.io/driver/sqlserver v1.4.1 // indirect
+	gorm.io/gorm v1.24.3 // indirect
 )

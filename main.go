@@ -39,6 +39,38 @@ func main() {
 		return nil, writePageTokenToFile(pageToken)
 	})
 
+	app.GET("load", func(ctx *gofr.Context) (interface{}, error) {
+		migratorConfig := getMigratorConfigFromEnv(ctx)
+		reverseMigratorConfig := getReverseMigratorConfigFromEnv(ctx)
+
+		client, err := getClient(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		eventMigrator := migrator.New(client, migratorConfig)
+		reverseMigrator := migrator.New(client, reverseMigratorConfig)
+
+		for true {
+			ctx.Logger.Infof("Starting event migrator")
+
+			_, err = eventMigrator.StartWithGoroutine(ctx)
+			if err != nil {
+				return nil, err
+			}
+
+			ctx.Logger.Infof("Starting reverse event migrator")
+			_, err = reverseMigrator.StartWithGoroutine(ctx)
+			if err != nil {
+				return nil, err
+			}
+
+			eventMigrator = migrator.New(client, reverseMigratorConfig)
+		}
+
+		return nil, nil
+	})
+
 	app.Start()
 }
 
@@ -46,6 +78,15 @@ func getMigratorConfigFromEnv(ctx *gofr.Context) *models.MigratorConfig {
 	return &models.MigratorConfig{
 		SourceCalendarID:      ctx.Config.Get(SourceCalendar),
 		DestinationCalendarID: ctx.Config.Get(DestinationCalendar),
+		TimeMin:               ctx.Config.Get(TimeMin),
+		TimeMax:               ctx.Config.Get(TimeMax),
+	}
+}
+
+func getReverseMigratorConfigFromEnv(ctx *gofr.Context) *models.MigratorConfig {
+	return &models.MigratorConfig{
+		SourceCalendarID:      ctx.Config.Get(DestinationCalendar),
+		DestinationCalendarID: ctx.Config.Get(SourceCalendar),
 		TimeMin:               ctx.Config.Get(TimeMin),
 		TimeMax:               ctx.Config.Get(TimeMax),
 	}

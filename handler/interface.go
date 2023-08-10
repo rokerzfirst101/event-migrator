@@ -4,4 +4,5 @@ import "developer.zopsmart.com/go/gofr/pkg/gofr"
 
 type EventMigrator interface {
 	Start(ctx *gofr.Context) (interface{}, error)
+	StartWithGoroutine(ctx *gofr.Context) (interface{}, error)
 }

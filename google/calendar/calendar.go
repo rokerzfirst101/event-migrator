@@ -4,6 +4,7 @@ import (
 	"context"
 	"event-migration-script/google"
 	"event-migration-script/google/token"
+	"event-migration-script/models"
 
 	"developer.zopsmart.com/go/gofr/pkg/gofr"
 	gcalendar "google.golang.org/api/calendar/v3"
@@ -31,19 +32,19 @@ func New(ctx *gofr.Context, credentialEnvKey, tokenEnvKey string) (google.Calend
 	return &calendar{service: service.Events}, nil
 }
 
-func (c calendar) List(sourceCalendar string, pageToken, timeMin, timeMax string) ([]*gcalendar.Event, string, error) {
-	listCall := c.service.List(sourceCalendar).
+func (c calendar) List(m *models.MigratorConfig, batchSize int, pageToken string) ([]*gcalendar.Event, string, error) {
+	listCall := c.service.List(m.SourceCalendarID).
 		SingleEvents(true).
 		OrderBy("startTime").
-		MaxResults(100).
+		MaxResults(int64(batchSize)).
 		PageToken(pageToken)
 
-	if timeMin != "" {
-		listCall.TimeMin(timeMin)
+	if m.TimeMin != "" {
+		listCall.TimeMin(m.TimeMin)
 	}
 
-	if timeMax != "" {
-		listCall.TimeMax(timeMax)
+	if m.TimeMax != "" {
+		listCall.TimeMax(m.TimeMax)
 	}
 
 	events, err := listCall.Do()

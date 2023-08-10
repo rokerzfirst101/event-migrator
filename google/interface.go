@@ -1,6 +1,7 @@
 package google
 
 import (
+	"event-migration-script/models"
 	"net/http"
 
 	"developer.zopsmart.com/go/gofr/pkg/gofr"
@@ -14,6 +15,6 @@ type ClientProvider interface {
 }
 
 type CalendarService interface {
-	List(sourceCalendar string, pageToken, timeMin, timeMax string) ([]*calendar.Event, string, error)
+	List(m *models.MigratorConfig, batchSize int, pageToken string) ([]*calendar.Event, string, error)
 	Move(sourceCalendar, eventID, destinationCalendarID string) (*calendar.Event, error)
 }
