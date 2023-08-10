@@ -22,7 +22,7 @@ func (m *migrator) Start(ctx *gofr.Context) (interface{}, error) {
 	firstRun := true
 
 	for firstRun || pageSyncToken != "" {
-		events, newPageSyncToken, err := m.calendar.List(m.config.SourceCalendarID, pageSyncToken)
+		events, newPageSyncToken, err := m.calendar.List(m.config.SourceCalendarID, pageSyncToken, m.config.TimeMin, m.config.TimeMax)
 		if err != nil {
 			continue
 		}

@@ -10,8 +10,6 @@ import (
 	"google.golang.org/api/option"
 )
 
-const state = "calendar"
-
 type calendar struct {
 	service *gcalendar.EventsService
 }
