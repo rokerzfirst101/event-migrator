@@ -4,17 +4,17 @@ import (
 	"developer.zopsmart.com/go/gofr/pkg/gofr"
 	"event-migration-script/google"
 	"event-migration-script/handler"
+	"event-migration-script/models"
 	gcalendar "google.golang.org/api/calendar/v3"
 )
 
 type migrator struct {
-	calendar              google.CalendarService
-	sourceCalendarID      string
-	destinationCalendarID string
+	calendar google.CalendarService
+	config   *models.MigratorConfig
 }
 
-func New(client google.CalendarService, sourceCalendarID, destinationCalendarID string) handler.EventMigrator {
-	return &migrator{calendar: client, sourceCalendarID: sourceCalendarID, destinationCalendarID: destinationCalendarID}
+func New(client google.CalendarService, config *models.MigratorConfig) handler.EventMigrator {
+	return &migrator{calendar: client, config: config}
 }
 
 func (m *migrator) Start(ctx *gofr.Context) (interface{}, error) {
@@ -22,7 +22,7 @@ func (m *migrator) Start(ctx *gofr.Context) (interface{}, error) {
 	firstRun := true
 
 	for firstRun || pageSyncToken != "" {
-		events, newPageSyncToken, err := m.calendar.List(m.sourceCalendarID, pageSyncToken)
+		events, newPageSyncToken, err := m.calendar.List(m.config.SourceCalendarID, pageSyncToken)
 		if err != nil {
 			continue
 		}
@@ -41,8 +41,8 @@ func (m *migrator) Start(ctx *gofr.Context) (interface{}, error) {
 
 func (m *migrator) migrateEvents(events []*gcalendar.Event) error {
 	for i := range events {
-		if events[i].Organizer.Email == m.sourceCalendarID {
-			_, err := m.calendar.Move(m.sourceCalendarID, events[i].Id, m.destinationCalendarID)
+		if events[i].Organizer.Email == m.config.SourceCalendarID {
+			_, err := m.calendar.Move(m.config.SourceCalendarID, events[i].Id, m.config.DestinationCalendarID)
 			if err != nil {
 				return err
 			}

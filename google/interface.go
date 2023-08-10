@@ -14,6 +14,6 @@ type ClientProvider interface {
 }
 
 type CalendarService interface {
-	List(sourceCalendar string, pageToken string) ([]*calendar.Event, string, error)
+	List(sourceCalendar string, pageToken, timeMin, timeMax string) ([]*calendar.Event, string, error)
 	Move(sourceCalendar, eventID, destinationCalendarID string) (*calendar.Event, error)
 }

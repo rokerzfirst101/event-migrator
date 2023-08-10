@@ -33,12 +33,20 @@ func New(ctx *gofr.Context, credentialEnvKey, tokenEnvKey string) (google.Calend
 	return &calendar{service: service.Events}, nil
 }
 
-func (c calendar) List(sourceCalendar string, pageToken string) ([]*gcalendar.Event, string, error) {
+func (c calendar) List(sourceCalendar string, pageToken, timeMin, timeMax string) ([]*gcalendar.Event, string, error) {
 	listCall := c.service.List(sourceCalendar).
 		SingleEvents(true).
 		OrderBy("startTime").
 		MaxResults(100).
 		PageToken(pageToken)
+
+	if timeMin != "" {
+		listCall.TimeMin(timeMin)
+	}
+
+	if timeMax != "" {
+		listCall.TimeMax(timeMax)
+	}
 
 	events, err := listCall.Do()
 	if err != nil {

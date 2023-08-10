@@ -5,6 +5,7 @@ import (
 	"event-migration-script/google"
 	"event-migration-script/google/calendar"
 	"event-migration-script/handler/migrator"
+	"event-migration-script/models"
 	"os"
 )
 
@@ -13,21 +14,22 @@ const (
 	RefreshToken        = "REFRESH_TOKEN"
 	SourceCalendar      = "SOURCE_CALENDAR"
 	DestinationCalendar = "DESTINATION_CALENDAR"
+	TimeMin             = "TIME_MIN"
+	TimeMax             = "TIME_MAX"
 )
 
 func main() {
 	app := gofr.NewCMD()
 
 	app.GET("start", func(ctx *gofr.Context) (interface{}, error) {
-		sourceCalendarID := ctx.Config.Get(SourceCalendar)
-		destinationCalendarID := ctx.Config.Get(DestinationCalendar)
+		migratorConfig := getMigratorConfigFromEnv(ctx)
 
 		client, err := getClient(ctx)
 		if err != nil {
 			return nil, err
 		}
 
-		eventMigrator := migrator.New(client, sourceCalendarID, destinationCalendarID)
+		eventMigrator := migrator.New(client, migratorConfig)
 
 		pageToken, err := eventMigrator.Start(ctx)
 		if err != nil {
@@ -38,6 +40,15 @@ func main() {
 	})
 
 	app.Start()
+}
+
+func getMigratorConfigFromEnv(ctx *gofr.Context) *models.MigratorConfig {
+	return &models.MigratorConfig{
+		SourceCalendarID:      ctx.Config.Get(SourceCalendar),
+		DestinationCalendarID: ctx.Config.Get(DestinationCalendar),
+		TimeMin:               ctx.Config.Get(TimeMin),
+		TimeMax:               ctx.Config.Get(TimeMax),
+	}
 }
 
 func writePageTokenToFile(pageToken interface{}) error {
