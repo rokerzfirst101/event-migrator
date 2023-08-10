@@ -14,7 +14,6 @@ import (
 )
 
 const (
-	MaxRetries        = 5
 	IntervalIncrement = 5 * time.Second
 )
 
@@ -31,7 +30,7 @@ func (m *migrator) Start(ctx *gofr.Context) (interface{}, error) {
 	pageSyncToken := "START"
 	count := 0
 
-	for pageSyncToken != "" && count < MaxRetries {
+	for pageSyncToken != "" && count < m.config.MaxRetries {
 		ctx.Logger.Infof("Calling List API for pageSyncToken: %s", pageSyncToken)
 
 		if pageSyncToken == "START" {
@@ -63,6 +62,8 @@ func (m *migrator) Start(ctx *gofr.Context) (interface{}, error) {
 		for _, event := range events {
 			err = m.migrateEvent(ctx, event)
 			if err != nil {
+				ctx.Logger.Infof("Move event failed %d times: %v, Saving ID to File", m.config.MaxRetries, err)
+
 				logFailedIDToFile(ctx, event.Id)
 
 				continue
@@ -73,6 +74,8 @@ func (m *migrator) Start(ctx *gofr.Context) (interface{}, error) {
 
 		pageSyncToken = newPageSyncToken
 	}
+
+	ctx.Logger.Infof("Migration completed successfully. Total events migrated: %d", count)
 
 	return pageSyncToken, nil
 }
@@ -134,23 +137,28 @@ func (m *migrator) migrateEvent(ctx *gofr.Context, event *gcalendar.Event) error
 	ctx.Logger.Infof("Starting Migration for Event: %s, from: %s to %s", pretty.PrintEvent(event), m.config.SourceCalendarID,
 		m.config.DestinationCalendarID)
 	if event.Organizer.Email == m.config.SourceCalendarID {
-		maxRetries := 0
+		i := m.config.MaxRetries
+		var err error
 
-		for maxRetries < 3 {
-			_, err := m.calendar.Move(m.config.SourceCalendarID, event.Id, m.config.DestinationCalendarID)
+		for i > 0 {
+			_, err = m.calendar.Move(m.config.SourceCalendarID, event.Id, m.config.DestinationCalendarID)
 			if err != nil {
-				sleepTime := time.Duration(maxRetries+1) * IntervalIncrement
+				sleepTime := time.Duration(i+1) * m.config.BackoffTime
 
 				ctx.Logger.Errorf("Got an error sleeping for %v: %v", sleepTime, err)
 
 				time.Sleep(sleepTime)
 
-				maxRetries++
-
 				continue
 			}
 
+			i--
+
 			break
+		}
+
+		if i == 0 {
+			return err
 		}
 	}
 

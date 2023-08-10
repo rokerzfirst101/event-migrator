@@ -7,6 +7,8 @@ import (
 	"event-migration-script/handler/migrator"
 	"event-migration-script/models"
 	"os"
+	"strconv"
+	"time"
 )
 
 const (
@@ -14,8 +16,8 @@ const (
 	RefreshToken        = "REFRESH_TOKEN"
 	SourceCalendar      = "SOURCE_CALENDAR"
 	DestinationCalendar = "DESTINATION_CALENDAR"
-	TimeMin             = "TIME_MIN"
-	TimeMax             = "TIME_MAX"
+	TimeMin             = "EVENT_TIME_MIN"
+	TimeMax             = "EVENT_TIME_MAX"
 )
 
 func main() {
@@ -75,11 +77,25 @@ func main() {
 }
 
 func getMigratorConfigFromEnv(ctx *gofr.Context) *models.MigratorConfig {
+	maxRetries := getMaxRetries(ctx)
+	if maxRetries == 0 {
+		ctx.Logger.Infof("MAX_RETRIES not set. Defaulting to 0")
+
+		maxRetries = 5
+	}
+
+	backoffTime := getBackoffTime(ctx)
+	if backoffTime == 0 {
+		ctx.Logger.Infof("BACKOFF_TIME not set. Defaulting to 0")
+	}
+
 	return &models.MigratorConfig{
 		SourceCalendarID:      ctx.Config.Get(SourceCalendar),
 		DestinationCalendarID: ctx.Config.Get(DestinationCalendar),
 		TimeMin:               ctx.Config.Get(TimeMin),
 		TimeMax:               ctx.Config.Get(TimeMax),
+		MaxRetries:            maxRetries,
+		BackoffTime:           backoffTime,
 	}
 }
 
@@ -119,4 +135,32 @@ func getClient(ctx *gofr.Context) (google.CalendarService, error) {
 	}
 
 	return client, nil
+}
+
+func getMaxRetries(ctx *gofr.Context) int {
+	maxRetriesString := os.Getenv("MAX_RETRIES")
+	if maxRetriesString != "" {
+		maxRetries, err := strconv.Atoi(maxRetriesString)
+		if err != nil {
+			ctx.Logger.Infof("Error while parsing MAX_RETRIES: %v", err)
+		}
+
+		return maxRetries
+	}
+
+	return 0
+}
+
+func getBackoffTime(ctx *gofr.Context) time.Duration {
+	backoffTimeString := os.Getenv("BACKOFF_TIME")
+	if backoffTimeString != "" {
+		backoffTime, err := strconv.Atoi(backoffTimeString)
+		if err != nil {
+			ctx.Logger.Infof("Error while parsing BACKOFF_TIME: %v", err)
+		}
+
+		return time.Duration(backoffTime) * time.Second
+	}
+
+	return 0
 }
