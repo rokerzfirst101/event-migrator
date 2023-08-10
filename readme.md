@@ -18,5 +18,9 @@ REFRESH_TOKEN: OAuth token for the account with Calendar Scope
 
 SOURCE_CALENDAR: Calendar ID of the source calendar
 DESTINATION_CALENDAR: Calendar ID of the destination calendar
+
+EVENT_TIME_MIN: Min time range for the events to be migrated. Needs to be in RFC3339 format
+EVENT_TIME_MAX: Max time range for the events to be migrated. Needs to be in RFC3339 format
+
 ```
 
