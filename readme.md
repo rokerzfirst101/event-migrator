@@ -7,10 +7,11 @@ for a maximum of `MAX_RETRIES` times.
 The script is setup to migrate events from first to last in chronological order.
 
 ## Usage
-1. Create a `.local.env` file in the root directory. 
-2. Set the required environment variables in the `.local.env` file.
-3. Set the optional environment variables as per the requirement.
-4. Start the program using `go run main.go start`
+1. Get Dependencies using `go get ./...`
+2. Create a `.local.env` file in the root directory. 
+3. Set the required environment variables in the `.local.env` file.
+4. Set the optional environment variables as per the requirement.
+5. Start the program using `go run main.go start`
 
 ## Environment Variables
 
