@@ -18,7 +18,7 @@ The script is setup to migrate events from first to last in chronological order.
 | Variable Name        | Description                                                  | Required |
 |----------------------|--------------------------------------------------------------|----------|
 | GOOGLE_CREDENTIALS   | Credentials for the GCP Project                              | Yes      |
-| REFRESH_TOKEN        | OAuth token for the account with Calendar Scope              | Yes      |
+| REFRESH_TOKEN        | OAuth token for the account with Calendar Scope.             | Yes      |
 | SOURCE_CALENDAR      | Calendar ID of the source calendar                           | Yes      |
 | DESTINATION_CALENDAR | Calendar ID of the destination calendar                      | Yes      |
 | EVENT_TIME_MIN       | Lower bound for the start time of the events to be migrated. | No       |
@@ -27,3 +27,5 @@ The script is setup to migrate events from first to last in chronological order.
 | BACKOFF_TIME         | Time to wait between retries.                                | No       |
 
 > Note: The `EVENT_TIME_MIN` and `EVENT_TIME_MAX` are in RFC3339 format. E.g.: `2023-08-10T21:27:37+05:30`
+
+> Example Refresh Token Value: "{"refresh_token": "{refreshToken}"}"
