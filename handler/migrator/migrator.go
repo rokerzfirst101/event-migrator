@@ -28,9 +28,9 @@ func New(client google.CalendarService, config *models.MigratorConfig) handler.E
 
 func (m *migrator) Start(ctx *gofr.Context) (interface{}, error) {
 	pageSyncToken := "START"
-	count := 0
+	var retryCount, migratedCount int
 
-	for pageSyncToken != "" && count < m.config.MaxRetries {
+	for pageSyncToken != "" {
 		ctx.Logger.Infof("Calling List API for pageSyncToken: %s", pageSyncToken)
 
 		if pageSyncToken == "START" {
@@ -45,13 +45,13 @@ func (m *migrator) Start(ctx *gofr.Context) (interface{}, error) {
 
 				return nil, err
 			} else if googleErr.Code == 403 {
-				sleepTime := time.Duration(count) * IntervalIncrement
+				sleepTime := time.Duration(retryCount+1) * IntervalIncrement
 
 				ctx.Logger.Infof("Quota Exceeded. Sleeping for %v", sleepTime)
 
 				time.Sleep(sleepTime)
 
-				count++
+				retryCount++
 
 				continue
 			} else {
@@ -69,13 +69,13 @@ func (m *migrator) Start(ctx *gofr.Context) (interface{}, error) {
 				continue
 			}
 
-			count++
+			migratedCount++
 		}
 
 		pageSyncToken = newPageSyncToken
 	}
 
-	ctx.Logger.Infof("Migration completed successfully. Total events migrated: %d", count)
+	ctx.Logger.Infof("Migration completed successfully. Total events migrated: %d", migratedCount)
 
 	return pageSyncToken, nil
 }
