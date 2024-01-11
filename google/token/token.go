@@ -1,7 +1,6 @@
 package token
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 
@@ -11,29 +10,22 @@ import (
 	"golang.org/x/oauth2/google"
 )
 
-const (
-	GoogleCalendar = "calendar"
-)
-
 func NewClientFromEnv(ctx *gofr.Context, credentialEnvKey, tokenEnvKey string, scopes []string) (*http.Client, error) {
 	credentialData, err := readEnvValue(ctx, credentialEnvKey)
 	if err != nil {
 		return nil, err
 	}
 
-	tokenData, err := readEnvValue(ctx, tokenEnvKey)
+	credentialBytes := []byte(credentialData)
+
+	refreshToken, err := readEnvValue(ctx, tokenEnvKey)
 	if err != nil {
 		return nil, err
 	}
 
-	var token *oauth2.Token
+	token := &oauth2.Token{RefreshToken: refreshToken}
 
-	err = json.Unmarshal(tokenData, &token)
-	if err != nil {
-		return nil, err
-	}
-
-	config, err := google.ConfigFromJSON(credentialData, scopes...)
+	config, err := google.ConfigFromJSON(credentialBytes, scopes...)
 	if err != nil {
 		return nil, err
 	}
@@ -41,14 +33,14 @@ func NewClientFromEnv(ctx *gofr.Context, credentialEnvKey, tokenEnvKey string, s
 	return config.Client(ctx, token), nil
 }
 
-func readEnvValue(ctx *gofr.Context, envKey string) ([]byte, error) {
+func readEnvValue(ctx *gofr.Context, envKey string) (string, error) {
 	value := ctx.Config.Get(envKey)
 	if value == "" {
-		return nil, &gofrErr.Response{
+		return "", &gofrErr.Response{
 			StatusCode: http.StatusInternalServerError,
 			Reason:     fmt.Sprintf("Unable to read %s from environment", envKey),
 		}
 	}
 
-	return []byte(value), nil
+	return value, nil
 }
